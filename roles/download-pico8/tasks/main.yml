@@ -1,0 +1,59 @@
+---
+- name: Login to Lexaloffle website
+  uri: 
+    url: https://www.lexaloffle.com/account.php?page=login
+    method: POST
+    body_format: form-urlencoded
+    body:
+      user: "{{ lexaloffle_username }}"
+      pass: "{{ lexaloffle_password }}"
+      # enter: Sign in
+    status_code: 200
+    follow_redirects: true
+  register: login_response
+
+- name: Inspect the login_response variable
+  debug:
+    var: login_response
+
+- name: Retrieve webpage content using cookie
+  ansible.builtin.uri:
+    url: "https://www.lexaloffle.com/games.php?page=archive"
+    method: GET
+    return_content: true
+    headers:
+      Cookie: "{{ login_response.cookies_string }}"
+    body_format: json
+    status_code: 200
+    validate_certs: no
+  register: webpage_content
+
+
+# - name: Inspect the webpage_content variable
+#   debug:
+#     var: "{{ webpage_content.content }}"
+
+
+- name: Extract latest version
+  set_fact:
+    latest_version: "{{ webpage_content.content | regex_findall('pico-[0-9]+_[0-9]+\\.[0-9]+\\.[0-9]+[a-z]_' + (file_type) | string ) | last }}"
+
+- name: Inspect latest version 
+  debug:
+    var: latest_version
+
+
+- name: Download the latest pico-8 binary
+  get_url: 
+    url: https://www.lexaloffle.com/dl/7tiann/{{ latest_version }}  
+    dest: /tmp/
+  when: login_response.status == 200
+
+- name: extract pico-8 binary
+  unarchive:
+    src: /tmp/{{ latest_version }}
+    dest: "{{ pico_install_dir }}"
+    owner: root
+    group: root
+
+

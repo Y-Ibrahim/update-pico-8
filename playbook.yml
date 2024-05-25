@@ -1,0 +1,10 @@
+---
+
+- name: Update Pico-8 binary
+  hosts: 192.168.1.88
+  # connection: local
+  remote_user: root
+  become: yes
+  roles: 
+    - download-pico8      
+
