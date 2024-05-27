@@ -2,9 +2,20 @@
 
 - name: Update Pico-8 binary
   hosts: rgb30
-  # connection: local
   remote_user: root
   become: yes
+  vars_prompt:
+    - name: "prompted_lexaloffle_username"
+      prompt: "Please enter your username"
+      private: no
+    - name: "prompted_lexaloffle_password"
+      prompt: "Please enter your password"
+      private: yes 
+
   roles: 
-    - download-pico8      
+    - role: download-pico8   
+      vars:
+        lexaloffle_username: "{{ prompted_lexaloffle_username }}"
+        lexaloffle_password: "{{ prompted_lexaloffle_password }}"
+
 
